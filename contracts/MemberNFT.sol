@@ -22,7 +22,7 @@ contract MemberNFT is ERC721Enumerable, ERC721URIStorage, Ownable {
      * @dev 
      * - このコントラクトをデプロイしたアドレスだけがmint可能 onlyOwner
      */
-    function nftMit(address to, string calldata uri) external onlyOwner {
+    function nftMint(address to, string calldata uri) external onlyOwner {
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
         _mint(to, newTokenId);
