@@ -11,8 +11,8 @@ const main = async () => {
     const tokenURI5 = "ipfs://bafybeigyod7ldrnytkzrw45gw2tjksdct6qaxnsc7jdihegpnk2kskpt7a/metadata5.json";
 
     // デプロイ
-    MemberNFT = await ethers.getContractFactory("MemberNFT");
-    memberNFT = await MemberNFT.deploy();
+    const MemberNFT = await ethers.getContractFactory("MemberNFT");
+    const memberNFT = await MemberNFT.deploy();
     await memberNFT.deployed();
 
     console.log(`contract deployed to: https://goerli.etherscan.io/address/${memberNFT.address}`);
