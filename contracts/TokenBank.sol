@@ -82,10 +82,10 @@ contract TokenBank {
         address to,
         uint256 amount
     ) internal {
-        require(to != address(0), "Zero adress cannot be specified for 'to' !");
+        require(to != address(0), "Zero address cannot be specified for 'to' !");
         uint256 fromBalance = _balances[from];
 
-        require(fromBalance >= amount, "Insufficient balanace!");
+        require(fromBalance >= amount, "Insufficient balance!");
 
         _balances[from] = fromBalance - amount;
         _balances[to] += amount;
