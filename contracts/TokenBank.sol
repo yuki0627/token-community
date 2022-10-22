@@ -69,4 +69,26 @@ contract TokenBank {
     function balanceOf(address account) public view returns (uint256) {
         return _balances[account];
     }
+
+    /// @dev Tokenを移転する
+    function transfer(address to, uint256 amount) public {
+        address from = msg.sender;
+        _transfer(from, to, amount);
+    }
+
+    /// @dev 移転処理
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal {
+        require(to != address(0), "Zero adress cannot be specified for 'to' !");
+        uint256 fromBalance = _balances[from];
+
+        require(fromBalance >= amount, "Insufficient balanace!");
+
+        _balances[from] = fromBalance - amount;
+        _balances[to] += amount;
+        emit TokenTransfer(from, to, amount);
+    }
 }
