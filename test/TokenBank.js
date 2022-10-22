@@ -2,6 +2,14 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("TokenBank コントラクト", function () {
+    let MemberNFT;
+    let memberNFT;
+    const tokenURI1 = "hoge1";
+    const tokenURI2 = "hoge2";
+    const tokenURI3 = "hoge3";
+    const tokenURI4 = "hoge4";
+    const tokenURI5 = "hoge5";
+
     let TokenBank;
     let tokenBank;
     const name = "TokenBank";
@@ -10,12 +18,20 @@ describe("TokenBank コントラクト", function () {
     let account1;
     let account2;
     let account3;
-    const zeroAccountess = "0x0000000000000000000000000000000000000000";
+    const zeroAccount = "0x0000000000000000000000000000000000000000";
 
     beforeEach(async function () {
         [owner, account1, account2, account3] = await ethers.getSigners();
+        MemberNFT = await ethers.getContractFactory("MemberNFT");
+        memberNFT = await MemberNFT.deploy();
+        await memberNFT.deployed();
+        await memberNFT.nftMint(owner.address, tokenURI1);
+        await memberNFT.nftMint(account1.address, tokenURI2);
+        await memberNFT.nftMint(account1.address, tokenURI3);
+        await memberNFT.nftMint(account2.address, tokenURI4);
+
         TokenBank = await ethers.getContractFactory("TokenBank");
-        tokenBank = await TokenBank.deploy(name, symbol);
+        tokenBank = await TokenBank.deploy(name, symbol, memberNFT.address);
         await tokenBank.deployed();
     });
 
@@ -52,7 +68,7 @@ describe("TokenBank コントラクト", function () {
             expect(endAccount2Balance).to.equal(startAccount2Balance.add(100));
         });
         it("ゼロアドレス宛の移転は失敗すべき", async function () {
-            await expect(tokenBank.transfer(zeroAccountess, 100))
+            await expect(tokenBank.transfer(zeroAccount, 100))
                 .to.be.revertedWith("Zero address cannot be specified for 'to' !");
         });
         it("残高不足の場合は移転に失敗すべき", async function () {
@@ -111,9 +127,35 @@ describe("TokenBank コントラクト", function () {
             await expect(tokenBank.connect(account1).withdraw(101))
                 .to.be.revertedWith("The amount grater than your tokenBank balance!");
         });
-        it("預入後はTokenWithdrawイベントが発行される", async function () {
+        it("引き出し後はTokenWithdrawイベントが発行される", async function () {
             expect(tokenBank.connect(account1).withdraw(100))
                 .emit(tokenBank, "TokenWithdraw").withArgs(account1.address, 100);
+        });
+
+
+        it("オーナーによる預入は失敗すべき", async function () {
+            await expect(tokenBank.deposit(1))
+                .to.be.revertedWith("Owner cannot execute");
+        });
+        it("オーナーによる引き出しは失敗すべき", async function () {
+            await expect(tokenBank.withdraw(1))
+                .to.be.revertedWith("Owner cannot execute");
+        });
+        it("トータル預入トークン数より大きな数はオーナーであっても移転に失敗する", async function () {
+            await expect(tokenBank.transfer(account1.address, 201))
+                .to.be.revertedWith("The amounts grater than the total supply cannot be transferred");
+        });
+        it("NFTメンバー以外の移転は失敗すべき", async function () {
+            await expect(tokenBank.connect(account3).transfer(account1.address, 100))
+                .to.be.revertedWith("not NFT member");
+        });
+        it("NFTメンバー以外の預入は失敗すべき", async function () {
+            await expect(tokenBank.connect(account3).deposit(100))
+                .to.be.revertedWith("not NFT member");
+        });
+        it("NFTメンバー以外の引き出しは失敗すべき", async function () {
+            await expect(tokenBank.connect(account3).withdraw(100))
+                .to.be.revertedWith("not NFT member");
         });
     });
 });
