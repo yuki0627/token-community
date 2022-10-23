@@ -2,7 +2,7 @@ import Head from 'next/head'
 import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import axios from 'axios'
-import { memberNFTAddress, tokenBankAddress } from '../../contracts.js'
+import { memberNFTAddress, tokenBankAddress } from '../../contracts'
 import MemberNFT from '../contracts/MemberNFT.json'
 import TokenBank from '../contracts/TokenBank.json'
 
@@ -17,24 +17,25 @@ export default function Home() {
   const [items, setItems] = useState([])
   const goerliId = '0x5'
   const zeroAddress = "0x0000000000000000000000000000000000000000";
-
+  
   const checkMetaMaskInstalled = async () => {
     const { ethereum } = window;
     if (!ethereum) {
-      alert("メタマスクをインストールしてください");
+      alert('MetaMaskをインストールしてください！');
     }
   }
 
   const checkChainId = async () => {
     const { ethereum } = window;
     if (ethereum) {
-      const chainId = await ethereum.request({
+      const chain = await ethereum.request({
         method: 'eth_chainId'
       });
-      console.log('chainId:', chainId);
-      if (chainId != goerliId) {
-        alert("Goerliに接続してください");
-        return;
+      console.log(`chain: ${chain}`);
+
+      if (chain != goerliId) {
+        alert('Goerliに接続してください');
+        return
       } else {
         setChainId(true);
       }
@@ -47,11 +48,24 @@ export default function Home() {
       const accounts = await ethereum.request({
         method: 'eth_requestAccounts'
       });
-      console.log('accounts[0]:', accounts[0]);
-      setAccount(accounts[0]);
+      console.log(`account: ${accounts[0]}`)
+      setAccount(accounts[0])
+
+      ethereum.on('accountsChanged', checkAccountChanged);
+      ethereum.on('chainChanged', checkChainId);
     } catch (err) {
-      console.log('err:', err);
+      console.log(err)
     }
+  }
+
+  const checkAccountChanged = () => {
+    setAccount('');
+    setNftOwner(false);
+    setItems([]);
+    setTokenBalance('');
+    setBankBalance('');
+    setBankTotalDeposit('');
+    setInputData({ transferAddress: '', transferAmount: '', depositAmount: '', withdrawAmount: '' });
   }
 
   useEffect(() => {
@@ -67,7 +81,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <h2 className={'text-6xl font-bold my-12 mt-8'}>
-        トークンコミュニティへようこそ
+        トークンコミュニティへようこそ！
       </h2>
       <div className='mt-8 mb-16 hover:rotate-180 hover:scale-105 transition duration-700 ease-in-out'>
         <svg
@@ -84,13 +98,12 @@ export default function Home() {
       </div>
       <div className={'flex mt-1'}>
         {account === '' ? (
-          <button className={'bg-transparent text-blue-700 font-semibold py-2 px-4 border border-blue-500 rounded hover:border-transparent hover:text-white hover:bg-blue-500 hover:cursor-pointer'} onClick={connectWallet}>
-              MetaMaskを接続
-          </button>
-        ) : (<></>)} 
+          <button className={'bg-transparent text-blue-700 font-semibold py-2 px-4 border border-blue-500 rounded hover:border-transparent hover:text-white hover:bg-blue-500 hover:cursor-pointer'}
+          onClick={connectWallet}>
+            MetaMaskを接続
+          </button>          
+        ) : (<></>)}
       </div>
-      
     </div>
-    
   )
 }
