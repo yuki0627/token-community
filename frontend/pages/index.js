@@ -21,12 +21,29 @@ export default function Home() {
   const checkMetaMaskInstalled = async () => {
     const { ethereum } = window;
     if (!ethereum) {
-      alert("メタマスクをインストールしてください")
+      alert("メタマスクをインストールしてください");
+    }
+  }
+
+  const checkChainId = async () => {
+    const { ethereum } = window;
+    if (ethereum) {
+      const chainId = await ethereum.request({
+        method: 'eth_chainId'
+      });
+      console.log('chainId:', chainId);
+      if (chainId != goerliId) {
+        alert("Goerliに接続してください");
+        return;
+      } else {
+        setChainId(true);
+      }
     }
   }
 
   useEffect(() => {
     checkMetaMaskInstalled();
+    checkChainId();
   }, []);
 
   return (
