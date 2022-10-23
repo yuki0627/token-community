@@ -41,7 +41,7 @@ const main = async () => {
     fs.writeFileSync("./contracts.js",
         `
         export const memberNFTAddress = "${memberNFTAddress}"
-        export const tokenBankNFTAddress = "${tokenBank.address}"
+        export const tokenBankAddress = "${tokenBank.address}"
         `
     );
 }
