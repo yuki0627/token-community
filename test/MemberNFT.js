@@ -11,13 +11,26 @@ describe("MemberNFTコントラクト", function () {
     let owner;
     let addr1;
 
-    beforeEach(async function() {
+    beforeEach(async function () {
         [owner, addr1] = await ethers.getSigners();
         MemberNFT = await ethers.getContractFactory("MemberNFT");
         memberNFT = await MemberNFT.deploy();
         await memberNFT.deployed();
     });
     
+    it("burn出来る", async function () {
+        await memberNFT.nftMint(addr1.address, tokenURI1);
+        expect(await memberNFT.ownerOf(1)).to.equal(addr1.address);
+        let totalSupply = await memberNFT.totalSupply();
+        let totalSupply_number = totalSupply.toNumber();
+        console.log('totalSupply_number:', totalSupply_number);
+
+        await memberNFT.burn(1);
+        totalSupply = await memberNFT.totalSupply();
+        totalSupply_number = totalSupply.toNumber();
+        console.log('totalSupply_number:', totalSupply_number);
+    });
+
 
     it("トークンの名前とシンボルがセットされている", async function () {
         expect(await memberNFT.name()).to.equal(name);

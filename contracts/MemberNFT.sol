@@ -36,6 +36,10 @@ contract MemberNFT is ERC721Enumerable, ERC721URIStorage, Ownable {
         emit TokenURIChanged(to, newTokenId, uri);
     }
 
+    function burn(uint256 tokenId) external onlyOwner {
+        _burn(tokenId);
+    }
+
     /**
      * @dev 
      * - オーバーライド
