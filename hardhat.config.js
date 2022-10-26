@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
+require("hardhat-gas-reporter");
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -15,5 +16,9 @@ module.exports = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
+  },
+  gasReporter: {
+    currency: 'JPY',
+    gasPrice: 21
   }
 };
