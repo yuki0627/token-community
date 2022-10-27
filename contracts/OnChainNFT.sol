@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract OnChainNFT is ERC721URIStorage, Ownable {
 
@@ -74,7 +74,7 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        string memory alive = super.tokenURI(tokenId);
+        // string memory alive = super.tokenURI(tokenId);
         console.log("tokenId", tokenId);
         console.log("block.timestamp", block.timestamp);
         string memory imageData = '\
