@@ -5,6 +5,7 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+// import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
@@ -18,6 +19,7 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
      */
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
+    mapping(uint256 => uint) public birthdays;
 
     /**
      * @dev
@@ -27,16 +29,24 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
 
     constructor() ERC721("OnChainNFT", "OCN") {}
 
+    function remainTime(uint256 tokenId) public view returns(uint) {
+        uint life = birthdays[tokenId] + 7;
+        if(block.timestamp > life) {
+            return 0;
+        } else {
+            return life - block.timestamp;
+        }
+    }
     /**
      * @dev 
-     * - このコントラクトをデプロイしたアドレスだけがmint可能 onlyOwner
+     * - 誰でもMint可能
      * - tokenIdをインクリメント _tokenIds.increment()
      * - 画像データメタデータを設定しURIを定義 imageData, metaData,uri     
      * - nftMint関数実行アドレス(=デプロイアドレス)にtokenIdを紐づけ _msgSender()
-     * - mintの際にURIを設定　_setTokenURI（）
+     * - mintの際にURIを設定 _setTokenURI（）
      * - EVENT発火 emit TokenURIChanged
      */
-    function nftMint() public onlyOwner {
+    function nftMint() public {
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
 
@@ -50,7 +60,7 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
             '{"name": "',
             'Alive # ',
             Strings.toString(newTokenId),
-            '", "description": "7 days left...",',
+            '", "description": "life is short",',
             '"image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(imageData)),
             '"}'
@@ -60,6 +70,7 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
 
         _mint(_msgSender(), newTokenId);
         _setTokenURI(newTokenId, uri);
+        birthdays[newTokenId] = block.timestamp;
 
         emit TokenURIChanged(_msgSender(), newTokenId, uri);
     }
@@ -88,6 +99,9 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
                 'Dead #  ',
                 Strings.toString(block.timestamp),
                 '", "description": "goodbye",',
+                '"remain": "',
+                Strings.toString(remainTime(tokenId)),
+                '",',
                 '"image": "data:image/svg+xml;base64,',
                 Base64.encode(bytes(imageData)),
                 '"}'
