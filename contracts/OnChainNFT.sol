@@ -11,15 +11,15 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "hardhat/console.sol";
 
-contract OnChainNFT is ERC721URIStorage, Ownable {
+interface IMemberNFT {
+    function balanceOf(address owner) external view returns (uint256);
+}
 
-    /**
-     * @dev
-     * - _tokenIdsはCountersの全関数が利用可能
-     */
+contract OnChainNFT is ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     mapping(uint256 => uint) public birthdays;
+    IMemberNFT public imemberNFT;
 
     /**
      * @dev
@@ -27,10 +27,12 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
      */
     event TokenURIChanged(address indexed sender, uint256 indexed tokenId, string uri);
 
-    constructor() ERC721("OnChainNFT", "OCN") {}
+    constructor(address nftContract_) ERC721("OnChainNFT", "OCN") {
+        imemberNFT = IMemberNFT(nftContract_);
+    }
 
     function remainTime(uint256 tokenId) public view returns(uint) {
-        uint life = birthdays[tokenId] + 7;
+        uint life = birthdays[tokenId] + 7 minutes;
         if(block.timestamp > life) {
             return 0;
         } else {
@@ -60,7 +62,7 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
             '{"name": "',
             'Alive # ',
             Strings.toString(newTokenId),
-            '", "description": "life is short",',
+            '", "description": "life is short", ',
             '"image": "data:image/svg+xml;base64,',
             Base64.encode(bytes(imageData)),
             '"}'
@@ -84,11 +86,18 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
         return uint256(rand) % 2;
     }
 
+    function memberNftCount(address targetAddress) public view returns (uint256) {
+        return imemberNFT.balanceOf(targetAddress);
+    }
+
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        // string memory alive = super.tokenURI(tokenId);
-        console.log("tokenId", tokenId);
-        console.log("block.timestamp", block.timestamp);
-        string memory imageData = '\
+        require(_exists(tokenId), "nonexsitent token" );
+        uint256 count = memberNftCount(ownerOf(tokenId));
+        if(remainTime(tokenId) > 0 ){
+            return super.tokenURI(tokenId);
+        } else {
+            // address imemberNFT.ownerOf(tokenId);
+            string memory imageData = '\
                 <svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg">\
                     <polygon points="50 175, 175 50, 300 175, 175 300" stroke="green" fill="red" />\
                 </svg>\
@@ -98,6 +107,8 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
                 '{"name": "',
                 'Dead #  ',
                 Strings.toString(block.timestamp),
+                '", "count": "',
+                Strings.toString(count),
                 '", "description": "goodbye",',
                 '"remain": "',
                 Strings.toString(remainTime(tokenId)),
@@ -106,14 +117,8 @@ contract OnChainNFT is ERC721URIStorage, Ownable {
                 Base64.encode(bytes(imageData)),
                 '"}'
             );
-        string memory dead = string(abi.encodePacked("data:application/json;base64,",Base64.encode(metaData)));
-        return dead;
-        // if((block.timestamp % 2) == 0 ) {
-        //     console.log("alive");
-        //     return alive;
-        // } else {
-        //     console.log("dead");
-        //     return dead;
-        // }
+            string memory dead = string(abi.encodePacked("data:application/json;base64,",Base64.encode(metaData)));
+            return dead;
+        }
     }
 }
