@@ -15,7 +15,13 @@ contract MemberNFT is ERC721Enumerable, ERC721URIStorage, Ownable {
      */
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
+    uint _start;
+    uint _end;
 
+    modifier timerOver {
+        require(block.timestamp <= _end, "The timer is over");
+        _;
+    }
     /**
      * @dev 
      * - 誰にどのURIでNFTをmintしたかを記録
@@ -34,6 +40,20 @@ contract MemberNFT is ERC721Enumerable, ERC721URIStorage, Ownable {
         _mint(to, newTokenId);
         _setTokenURI(newTokenId, uri);
         emit TokenURIChanged(to, newTokenId, uri);
+    }
+
+    function burn(uint256 tokenId) external onlyOwner {
+        _burn(tokenId);
+    }
+
+    // TOOD: tokenに持たせる
+    function start() public onlyOwner {
+        _start = block.timestamp;
+        _end = _start + 10; //10秒
+    }
+
+    function getTimeLeft() public timerOver view returns(uint) {
+        return _end - block.timestamp;
     }
 
     /**
